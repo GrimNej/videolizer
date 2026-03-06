@@ -22,6 +22,7 @@ full = [
     "torch>=2.5.0",
     "torchaudio>=2.5.0",
     "chatterbox-tts",
+    "resemble-perth",
     "pydub>=0.25.0",
     "moviepy>=1.0.3",
     "Pillow>=11.0.0",
