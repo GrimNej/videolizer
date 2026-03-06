@@ -59,7 +59,7 @@ def _generate_chatterbox(text: str, out_path: Path, log: "JobLogger", *, t0: flo
     - VIDEOLIZER_TTS_CHUNK_CHARS=450
     - VIDEOLIZER_VOICEOVER_STYLE=calm|raw
     - VIDEOLIZER_VOICEOVER_SPEED=0.75 (calm style)
-    - VIDEOLIZER_VOICEOVER_PITCH=0.0  (frame-rate trick)
+    - VIDEOLIZER_VOICEOVER_PITCH=0.15  (frame-rate trick)
     """
     # Avoid torchvision import issues inside transformers/Chatterbox.
     os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
@@ -75,6 +75,7 @@ def _generate_chatterbox(text: str, out_path: Path, log: "JobLogger", *, t0: flo
 
     chunk_chars = int(os.getenv("VIDEOLIZER_TTS_CHUNK_CHARS", "450"))
     device = os.getenv("VIDEOLIZER_TTS_DEVICE", "cpu")
+    # Match Clip-Forge defaults: calm style at ~0.75x speed and +0.15 pitch.
     style = os.getenv("VIDEOLIZER_VOICEOVER_STYLE", "calm").lower()
 
     log.info("Loading ChatterboxTTS model", device=device)
@@ -107,8 +108,9 @@ def _generate_chatterbox(text: str, out_path: Path, log: "JobLogger", *, t0: flo
         assembled.export(str(temp_path), format="wav", parameters=["-ar", "44100"])
 
         if style == "calm":
+            # Defaults chosen to mirror Clip-Forge: 0.75x speed, slight pitch up.
             speed = float(os.getenv("VIDEOLIZER_VOICEOVER_SPEED", "0.75"))
-            pitch = float(os.getenv("VIDEOLIZER_VOICEOVER_PITCH", "0.0"))
+            pitch = float(os.getenv("VIDEOLIZER_VOICEOVER_PITCH", "0.15"))
             log.info("Applying calm style", speed=speed, pitch=pitch)
 
             audio = AudioSegment.from_wav(str(temp_path))
