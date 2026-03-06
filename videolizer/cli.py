@@ -42,7 +42,7 @@ def cmd_full(args: argparse.Namespace) -> int:
             log.warning("VIDEOLIZER_DRY_RUN enabled: generating placeholder artifacts only")
 
             # Minimal placeholder artifacts so the Rust tool can be exercised end-to-end.
-            script = (
+            script = plan_data.get("script") or (
                 f"Facts you didn't know about {plan_data.get('character','?')} "
                 f"from {plan_data.get('series','?')}. (dry run)"
             )
@@ -74,13 +74,19 @@ def cmd_full(args: argparse.Namespace) -> int:
             print(json.dumps(result.to_dict(), indent=2))
             return 0
 
-        # Step 1: Generate script (content)
-        log.step_start("content_generate")
-        t0 = time.perf_counter()
-        from . import content  # noqa: F401
+        # Step 1: Get script (either provided by Remix Engine, or generated here)
+        script = plan_data.get("script")
+        if script:
+            log.info("Using script provided in VideoPlan; skipping content generation")
+            (job_dir / "script.txt").write_text(script, encoding="utf-8")
+        else:
+            log.step_start("content_generate")
+            t0 = time.perf_counter()
+            from . import content  # noqa: F401
 
-        script = content.generate_script(plan_data["character"], plan_data["series"], log)
-        log.step_end("content_generate", time.perf_counter() - t0)
+            script = content.generate_script(plan_data["character"], plan_data["series"], log)
+            log.step_end("content_generate", time.perf_counter() - t0)
+            (job_dir / "script.txt").write_text(script, encoding="utf-8")
 
         # Step 2: Voiceover
         log.step_start("voiceover")
